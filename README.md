@@ -1,35 +1,122 @@
 # Vektor T13 - WebGPU Atomic Browser Fingerprint
 
-**Vektor T13 Technologies** • **detect.expert**  
-Developed by **Dmytro Momot**
+Vektor T13 Technologies  
+detect.expert  
+Developed by Dmytro Momot
 
-A self‑contained, **offline** WebGPU demo that collects a device signal based on an *AtomicIncrement* pattern: multiple compute‑shader workgroups compete for a single `atomicAdd` counter, and the resulting per‑workgroup increment distribution forms a hardware‑dependent fingerprint.
+A single-file, offline WebGPU demo that derives a browser/device fingerprint from atomic contention behavior inside GPU compute shaders.
 
-> ⚠️ WebGPU requires a **secure context** (`https://` or `http://localhost`).  
-> ✅ This page performs **no network I/O** (`connect-src 'none'` via CSP).  
-> 💾 The local “gallery” is stored in `localStorage` for this origin.
+---
+
+## Overview
+
+This project demonstrates a hardware-dependent fingerprinting signal based on WebGPU compute execution.
+
+Multiple compute shader workgroups are forced to compete for a single atomic counter using atomicAdd. The resulting distribution of increments across workgroups reflects GPU architecture, driver behavior, scheduling, and execution characteristics.
+
+The measured distribution is transformed into a compact feature vector and hashed to produce a reproducible device signal.
+
+---
+
+## Core idea
+
+The fingerprint is built from atomic contention:
+
+- A global atomic counter is shared by all workgroups
+- Each workgroup increments the counter until a fixed limit is reached
+- Each workgroup records how many increments it performed
+- The per-workgroup increment distribution is collected
+
+This distribution is highly sensitive to GPU execution details and is difficult to normalize across different hardware.
+
+---
+
+## Processing pipeline
+
+For each compute configuration:
+
+- Run multiple trials
+- Aggregate results using the median
+- Normalize per-workgroup counts
+- Downsample into a fixed number of bins
+- Concatenate distributions from all configurations
+- Quantize the final vector
+- Compute a SHA-256 hash
+
+The resulting hash represents the WebGPU Atomic Browser Fingerprint.
+
+---
+
+## Identification workflow
+
+The page supports a local identification mode:
+
+- Fingerprints can be enrolled into a local gallery
+- New fingerprints can be compared against enrolled samples
+- Similarity metrics:
+  - Cosine similarity
+  - Jensen–Shannon distance
+- A heuristic decision indicates whether the device is likely the same or different
+
+All data is stored locally using localStorage.
+
+---
 
 ## Features
 
-- **Atomic workgroup distribution**
-  - Compute shader uses a single global atomic counter (`atomicAdd`) and records how increments are distributed across workgroups.
-- **Stable feature vector + hash**
-  - For each config: median across trials → normalize → downsample to N bins
-  - Concatenate all configs → quantize to bytes → `SHA-256` via `SubtleCrypto.digest()`
-- **Local enrollment & identification**
-  - Save samples to a local gallery (`localStorage`)
-  - Compare current sample against enrolled ones using:
-    - Cosine similarity
-    - Jensen–Shannon distance
-- **Hardware & API hints**
-  - Reads `GPUAdapter.info` (fallback to deprecated `requestAdapterInfo()` if available)
-  - Displays WebGPU features and compute limits
-- **UI language switcher**
-  - Russian / English / Simplified Chinese / Vietnamese (top‑right)
+- WebGPU compute shader fingerprinting
+- AtomicAdd contention analysis
+- Multiple compute presets and workgroup layouts
+- Median aggregation across trials
+- Normalization and downsampling
+- SHA-256 fingerprint hash
+- Local enrollment and identification
+- Export and import of local gallery (JSON)
+- Hardware and API information via GPUAdapter.info
+- Multi-language interface:
+  - English
+  - Russian
+  - Simplified Chinese
+  - Vietnamese
+- No network requests (offline by design)
 
-## How to use
+---
 
-1. Host the file via **localhost** or HTTPS (WebGPU won’t work from `file://`).
-   Example:
-   ```bash
-   python -m http.server 8000
+## Requirements
+
+- Browser with WebGPU support
+- Secure context is required:
+  - HTTPS
+  - or localhost
+
+WebGPU is not available when opened via file://.
+
+---
+
+## Limitations
+
+- Results may vary depending on:
+  - GPU driver version
+  - Power and thermal state
+  - Background GPU load
+- Browsers may intentionally reduce fingerprinting surface
+  - GPUAdapter.info fields may be empty or masked
+- Similarity thresholds are heuristic and may require tuning
+
+This is a probabilistic fingerprint, not a cryptographic identifier.
+
+---
+
+## Privacy and ethics
+
+This project demonstrates a browser fingerprinting technique.
+
+The demo performs no network communication and stores all data locally, but fingerprinting can have privacy implications. Use responsibly and only with appropriate consent and legal justification.
+
+---
+
+## Credits
+
+© Vektor T13 Technologies  
+detect.expert  
+Developed by Dmytro Momot
