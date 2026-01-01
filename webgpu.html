@@ -1,0 +1,1286 @@
+<!doctype html>
+<!--
+  RU: Vektor T13 Technologies — WebGPU Atomic Browser Fingerprint (detect.expert)
+  RU: Разработал: Dmytro Momot
+  RU: Сайт: detect.expert
+
+  EN: Vektor T13 Technologies — WebGPU Atomic Browser Fingerprint (detect.expert)
+  EN: Developed by: Dmytro Momot
+  EN: Site: detect.expert
+
+  ZH-CN: Vektor T13 Technologies — WebGPU Atomic 浏览器指纹 (detect.expert)
+  ZH-CN: 开发者：Dmytro Momot
+  ZH-CN: 网站：detect.expert
+
+  VI: Vektor T13 Technologies — Dấu vân tay trình duyệt WebGPU Atomic (detect.expert)
+  VI: Phát triển bởi: Dmytro Momot
+  VI: Trang: detect.expert
+-->
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vektor T13 - WebGPU Atomic Browser Fingerprint | detect.expert</title>
+
+  <!-- Vektor T13 Technologies (detect.expert) — hard-block network (fetch/XHR/WebSocket). Developed by Dmytro Momot. -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' blob: data:;
+                 connect-src 'none';
+                 img-src 'self' blob: data:;
+                 media-src 'self' blob: data:;
+                 style-src 'self' 'unsafe-inline';
+                 script-src 'self' 'unsafe-inline' blob:;">
+
+  <style>
+    :root{
+      --bg:#0b0c0f; --fg:#e6e7eb; --muted:#b8bbc2;
+      --card:#141826; --border:#2a2f3a; --accent:#6aa7ff;
+      --ok:#2fd39a; --bad:#f17575; --warn:#f5c44b;
+      --shadow:0 8px 24px rgba(0,0,0,.25);
+    }
+    @media (prefers-color-scheme: light){
+      :root{ --bg:#f7f8fb; --fg:#101215; --muted:#586172; --card:#fff; --border:#e6e8ef; --accent:#2563eb; --ok:#0f9d58; --bad:#c62828; --warn:#b45309; --shadow:0 8px 24px rgba(0,0,0,.06); }
+    }
+    html,body{height:100%}
+    body{margin:0; background:var(--bg); color:var(--fg); font:14px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;}
+    .wrap{max-width:1150px; margin:32px auto; padding:0 20px;}
+    h1{font-size:26px; margin:0 0 6px;}
+    .sub{color:var(--muted); margin:0 0 18px;}
+    .row{display:flex; flex-wrap:wrap; gap:12px; align-items:center;}
+    .card{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px; box-shadow:var(--shadow);}
+    .grid{display:grid; gap:16px;}
+    @media (min-width: 980px){ .grid-2{grid-template-columns:1fr 1fr} .grid-3{grid-template-columns:1fr 1fr 1fr} }
+    button{background:transparent; color:var(--fg); border:1px solid var(--border); padding:8px 14px; border-radius:10px; cursor:pointer; transition:.15s}
+    button.primary{background:linear-gradient(135deg,var(--accent),#8fc6ff); color:#fff; border-color:transparent;}
+    button:disabled{opacity:.6; cursor:not-allowed}
+    select,input[type="text"]{background:transparent; color:var(--fg); border:1px solid var(--border); padding:8px 10px; border-radius:10px;}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+    .status b.ok{color:var(--ok)} .status b.bad{color:var(--bad)} .status b.warn{color:var(--warn)}
+    table{width:100%; border-collapse:collapse; font-size:13px;}
+    th,td{border-bottom:1px solid var(--border); padding:6px 8px; text-align:left;}
+    .pill{display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid var(--border); font-size:12px; color:var(--muted)}
+    .muted{color:var(--muted)}
+    canvas{width:100%; height:160px; display:block; background:transparent}
+    .flex-between{display:flex; justify-content:space-between; align-items:center; gap:12px}
+    .progress{display:flex; gap:10px; align-items:center; margin-top:10px}
+    .bar{position:relative; width:240px; height:10px; border-radius:999px; background:rgba(127,127,127,.2); overflow:hidden; border:1px solid var(--border)}
+    .bar > i{display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--accent),#9dd3ff);}
+    .pct{min-width:44px; text-align:right; font-variant-numeric:tabular-nums;}
+    .badge{font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid var(--border);}
+    .kv{display:grid; grid-template-columns:140px 1fr; gap:8px; font-size:13px}
+    .kv div{padding:2px 0}
+
+    /* Vektor T13 language switcher (top-right) */
+    .topbar{display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap;}
+    .lang{display:inline-flex; gap:8px; align-items:center; white-space:nowrap; margin-left:auto;}
+    .lang label{color:var(--muted); font-size:13px;}
+    .lang select{width:190px; max-width:100%;}
+    .footer{margin:14px 2px 0; opacity:.8}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h1 data-i18n="ui.h1">Vektor T13 - WebGPU Atomic Browser Fingerprint</h1>
+        <p class="sub" data-i18n-html="ui.sub">
+          <b>Vektor T13 Technologies</b> • <b>detect.expert</b> • Разработал <b>Dmytro Momot</b>.<br/>
+          Локальная демонстрация идеи <b>AtomicIncrement</b>: compute‑shader workgroups соревнуются за один <code>atomicAdd</code>‑счётчик.
+          Распределение инкрементов по workgroup даёт device‑specific сигнал.
+        </p>
+      </div>
+
+      <div class="lang" title="Language / Язык / 语言 / Ngôn ngữ">
+        <label for="lang" data-i18n="ui.langLabel">Язык:</label>
+        <select id="lang" aria-label="Language">
+          <option value="ru">Русский</option>
+          <option value="en">English</option>
+          <option value="zh">中文(简体)</option>
+          <option value="vi">Tiếng Việt</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- STATUS -->
+    <div class="card status">
+      <div class="flex-between">
+        <div id="status" data-i18n-html="status.checking">Статус: <b class="warn">Проверка…</b></div>
+        <div>
+          <span class="pill" id="galleryCount">Галерея: 0</span>
+          <span class="pill" id="adapterName">Адаптер: —</span>
+        </div>
+      </div>
+      <p class="muted" style="margin:8px 0 0" data-i18n-html="note.secureContext">
+        WebGPU работает только в <b>secure context</b> (<code>https://</code> или <code>http://localhost</code>);
+        иначе <code>navigator.gpu</code> недоступен.
+      </p>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="card">
+      <div class="row">
+        <div><span data-i18n="ui.trials">Trials</span>:
+          <select id="trials"><option>1</option><option selected>3</option><option>5</option></select>
+        </div>
+        <div><span data-i18n="ui.totalIncrements">Total increments</span>:
+          <select id="limit">
+            <option value="2000000">2,000,000</option>
+            <option value="4000000" selected>4,000,000</option>
+            <option value="8000000">8,000,000</option>
+          </select>
+        </div>
+        <div><span data-i18n="ui.downsampleBins">Downsample bins</span>:
+          <select id="bins"><option>32</option><option selected>64</option><option>128</option></select>
+        </div>
+        <div><span data-i18n="ui.preset">Preset</span>:
+          <select id="preset">
+            <option value="default" selected data-i18n="ui.preset.default">Default (C1 128×64, C2 256×64, C3 128×128)</option>
+            <option value="wide" data-i18n="ui.preset.wide">Wide (C1 64×64, C2 128×128, C3 256×128)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <button id="collect" class="primary" data-i18n="btn.collect">Collect fingerprint</button>
+        <input id="label" type="text" data-i18n-placeholder="ui.labelPlaceholder" placeholder="Label, e.g. 'MyPC-RTX4060'" />
+        <button id="enroll" disabled data-i18n="btn.enroll">Enroll locally</button>
+        <button id="identify" disabled data-i18n="btn.identify">Identify</button>
+        <button id="export" disabled data-i18n="btn.export">Export</button>
+        <input type="file" id="importFile" style="display:none" />
+        <button id="importBtn" data-i18n="btn.import">Import</button>
+        <button id="clear" data-i18n="btn.clear">Clear</button>
+
+        <div class="progress" id="progress" style="margin-left:auto">
+          <span class="pct" id="pct">0%</span>
+          <div class="bar"><i id="bar"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INFO + IDENTIFICATION -->
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="flex-between">
+          <h3 style="margin:0" data-i18n="card.current">Current fingerprint</h3>
+          <div class="row">
+            <span class="mono" id="hash">SHA‑256: —</span>
+            <button id="copyHash" data-i18n="btn.copyHash">Copy hash</button>
+          </div>
+        </div>
+
+        <table style="margin-top:8px">
+          <thead>
+            <tr>
+              <th data-i18n="tbl.config">Config</th>
+              <th data-i18n="tbl.runtime">Runtime</th>
+              <th data-i18n="tbl.total">Total</th>
+              <th data-i18n="tbl.mean">Mean</th>
+              <th data-i18n="tbl.std">Std</th>
+              <th data-i18n="tbl.cv">CV</th>
+            </tr>
+          </thead>
+          <tbody id="tbl"></tbody>
+        </table>
+
+        <div id="charts" style="margin-top:10px"></div>
+
+        <p class="muted" style="margin-top:8px" data-i18n-html="note.hash">
+          Hash is computed over quantized, concatenated per‑config distributions via <code>SubtleCrypto.digest('SHA-256')</code>.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="flex-between">
+          <h3 style="margin:0" data-i18n="card.identification">Identification</h3>
+          <span class="muted" data-i18n="card.identification.sub">Cosine similarity + Jensen–Shannon distance</span>
+        </div>
+        <div style="margin-top:10px">
+          <canvas id="gauge" style="height:80px"></canvas>
+        </div>
+        <pre id="idents" class="mono" style="min-height:120px; white-space:pre-wrap; margin:10px 0 0"></pre>
+      </div>
+    </div>
+
+    <!-- HARDWARE -->
+    <div class="grid grid-2" style="margin-top:16px">
+      <div class="card">
+        <h3 style="margin:0 0 8px" data-i18n="card.hardware">Hardware & API info</h3>
+        <div class="kv" id="hw">
+          <div data-i18n="hw.adapterName">Adapter name</div><div id="i_name">—</div>
+          <div data-i18n="hw.vendor">Vendor</div><div id="i_vendor">—</div>
+          <div data-i18n="hw.architecture">Architecture</div><div id="i_arch">—</div>
+          <div data-i18n="hw.device">Device</div><div id="i_device">—</div>
+          <div data-i18n="hw.description">Description</div><div id="i_desc">—</div>
+        </div>
+        <p class="muted" style="margin:8px 0 0" data-i18n-html="note.adapterInfo">
+          Modern WebGPU exposes <code>GPUAdapter.info</code> (replacing deprecated <code>requestAdapterInfo()</code>).
+          Browsers may return empty strings to reduce fingerprinting surface.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3 style="margin:0 0 8px" data-i18n="card.features">Features & limits</h3>
+        <div class="kv">
+          <div data-i18n="feat.features">Features</div><div id="i_features">—</div>
+          <div data-i18n="feat.wgsize">maxComputeWorkgroupSize</div><div id="i_wgsize">—</div>
+          <div data-i18n="feat.wgperdim">maxComputeWorkgroupsPerDim</div><div id="i_wgperdim">—</div>
+        </div>
+        <p class="muted" style="margin:8px 0 0" data-i18n-html="note.webgpuAvailability">
+          WebGPU requires a secure context; availability varies by browser and platform.
+        </p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3 style="margin:0 0 8px" data-i18n="card.about">About this demo</h3>
+      <p class="muted" style="margin:8px 0" data-i18n-html="card.about.text">
+        Inspired by research on WebGPU hardware‑based device fingerprinting (AtomicIncrement).
+        This page does <b>no network I/O</b>; the gallery is stored in <code>localStorage</code> on this origin.
+        <br/><br/>
+        <b>Vektor T13 Technologies</b> • <b>detect.expert</b> • Developed by <b>Dmytro Momot</b>.
+      </p>
+    </div>
+
+    <p class="muted footer" data-i18n-html="footer">
+      © <b>Vektor T13 Technologies</b> • <b>detect.expert</b> • Разработал <b>Dmytro Momot</b>
+    </p>
+  </div>
+
+<script>
+/*
+  Vektor T13 Technologies — WebGPU Atomic Browser Fingerprint (detect.expert)
+  Developed by / Разработал / 开发者 / Phát triển bởi: Dmytro Momot
+
+  RU: Локальная демонстрация: compute‑shader workgroups конкурируют за общий atomicAdd счётчик.
+      Распределение инкрементов по workgroup формирует device‑specific сигнал.
+  EN: Local demo: compute‑shader workgroups compete for a shared atomicAdd counter.
+      The per‑workgroup increment distribution forms a device‑specific signal.
+  ZH-CN: 本地演示：计算着色器工作组争用同一个 atomicAdd 计数器。
+      每个工作组的增量分布形成设备特征信号。
+  VI: Demo cục bộ: các workgroup shader tính toán tranh chấp một bộ đếm atomicAdd dùng chung.
+      Phân bố số lần tăng theo workgroup tạo tín hiệu đặc trưng thiết bị.
+*/
+(async function(){
+  'use strict';
+
+  const $ = s => document.querySelector(s);
+
+  // Elements
+  const statusEl = $('#status');
+  const galleryCountEl = $('#galleryCount');
+  const adapterNameEl = $('#adapterName');
+  const tblBody = $('#tbl');
+  const charts = $('#charts');
+  const identsEl = $('#idents');
+  const hashEl = $('#hash');
+  const gauge = $('#gauge');
+
+  const btnCollect = $('#collect'), btnEnroll = $('#enroll'), btnIdentify = $('#identify');
+  const btnExport = $('#export'), btnImport = $('#importBtn'), fileImport = $('#importFile'), btnClear = $('#clear'), btnCopy = $('#copyHash');
+  const selTrials = $('#trials'), selLimit = $('#limit'), selBins = $('#bins'), selPreset = $('#preset');
+  const inputLabel = $('#label');
+  const bar = $('#bar'), pct = $('#pct');
+
+  // Hardware fields
+  const i_name = $('#i_name'), i_vendor = $('#i_vendor'), i_arch = $('#i_arch'), i_device = $('#i_device'), i_desc = $('#i_desc');
+  const i_features = $('#i_features'), i_wgsize = $('#i_wgsize'), i_wgperdim = $('#i_wgperdim');
+
+  const langSel = $('#lang');
+
+  // =========================
+  // i18n — RU / EN / ZH-CN / VI
+  // =========================
+  const SUPPORTED_LANGS = ['ru','en','zh','vi'];
+  const I18N = {
+    ru: {
+      'doc.title': 'Vektor T13 - WebGPU Atomic Browser Fingerprint | detect.expert',
+      'ui.h1': 'Vektor T13 - WebGPU Atomic Browser Fingerprint',
+      'ui.sub': `<b>Vektor T13 Technologies</b> • <b>detect.expert</b> • Разработал <b>Dmytro Momot</b>.<br/>
+Локальная демонстрация идеи <b>AtomicIncrement</b>: compute‑shader workgroups соревнуются за один <code>atomicAdd</code>‑счётчик.
+Распределение инкрементов по workgroup даёт device‑specific сигнал.`,
+      'ui.langLabel': 'Язык:',
+      'note.secureContext': `WebGPU работает только в <b>secure context</b> (<code>https://</code> или <code>http://localhost</code>);
+иначе <code>navigator.gpu</code> недоступен.`,
+
+      'ui.trials': 'Прогоны',
+      'ui.totalIncrements': 'Всего инкрементов',
+      'ui.downsampleBins': 'Бины downsample',
+      'ui.preset': 'Пресет',
+      'ui.preset.default': 'Default (C1 128×64, C2 256×64, C3 128×128)',
+      'ui.preset.wide': 'Wide (C1 64×64, C2 128×128, C3 256×128)',
+      'ui.labelPlaceholder': "Метка, напр. 'MyPC-RTX4060'",
+
+      'btn.collect': 'Собрать отпечаток',
+      'btn.enroll': 'Добавить локально',
+      'btn.identify': 'Сравнить',
+      'btn.export': 'Экспорт',
+      'btn.import': 'Импорт',
+      'btn.clear': 'Очистить',
+      'btn.copyHash': 'Копировать hash',
+      'btn.copied': 'Скопировано!',
+
+      'status.checking': 'Статус: <b class="warn">Проверка…</b>',
+      'status.noGpu': 'Статус: <b class="bad">WebGPU недоступен (нет navigator.gpu)</b>',
+      'status.needSecure': 'Статус: <b class="warn">Нужен secure context (https:// или http://localhost)</b>',
+      'status.apiPresent': 'Статус: <b class="ok">WebGPU API доступен</b>',
+
+      'pill.gallery': 'Галерея: {n}',
+      'pill.adapter': 'Адаптер: {name}',
+
+      'card.current': 'Текущий отпечаток',
+      'tbl.config': 'Конфиг',
+      'tbl.runtime': 'Время',
+      'tbl.total': 'Всего',
+      'tbl.mean': 'Среднее',
+      'tbl.std': 'Ст. откл.',
+      'tbl.cv': 'CV',
+
+      'note.hash': `Hash считается по квантизированным объединённым распределениям по конфигам через <code>SubtleCrypto.digest('SHA-256')</code>.`,
+
+      'card.identification': 'Идентификация',
+      'card.identification.sub': 'Cosine similarity + Jensen–Shannon distance',
+
+      'card.hardware': 'Железо и API',
+      'hw.adapterName': 'Имя адаптера',
+      'hw.vendor': 'Vendor',
+      'hw.architecture': 'Архитектура',
+      'hw.device': 'Device',
+      'hw.description': 'Описание',
+      'note.adapterInfo': `Современный WebGPU использует <code>GPUAdapter.info</code> (вместо устаревшего <code>requestAdapterInfo()</code>).
+Браузеры могут возвращать пустые строки, чтобы снизить поверхность фингерпринтинга.`,
+
+      'card.features': 'Фичи и лимиты',
+      'feat.features': 'Features',
+      'feat.wgsize': 'maxComputeWorkgroupSize',
+      'feat.wgperdim': 'maxComputeWorkgroupsPerDim',
+      'note.webgpuAvailability': 'WebGPU требует secure context; доступность зависит от браузера и платформы.',
+
+      'card.about': 'О демо',
+      'card.about.text': `Вдохновлено исследованиями по hardware‑based фингерпринтингу через WebGPU (AtomicIncrement).
+Эта страница <b>не делает сетевых запросов</b>; “галерея” хранится в <code>localStorage</code> этого origin.
+<br/><br/><b>Vektor T13 Technologies</b> • <b>detect.expert</b> • Разработал <b>Dmytro Momot</b>.`,
+
+      'footer': '© <b>Vektor T13 Technologies</b> • <b>detect.expert</b> • Разработал <b>Dmytro Momot</b>',
+
+      'chart.normalized': 'Нормализованное, downsampled распределение',
+      'chart.bins': 'бинов',
+
+      'msg.collectFirst': 'Сначала нажми “Собрать отпечаток”.',
+      'msg.noSamples': 'Нет локальных образцов — нажми “Добавить локально”, чтобы сохранить baseline.',
+      'msg.error': 'Ошибка: {e}',
+      'msg.enrolled': 'Добавлено: {label}\\nВсего образцов: {n}',
+      'msg.imported': 'Импортировано образцов: {n}.',
+      'msg.invalidJson': 'Неверный формат JSON.',
+      'msg.parseFail': 'Не удалось распарсить JSON.',
+      'msg.galleryCleared': 'Галерея очищена.',
+
+      'id.total': 'Всего образцов: {n}',
+      'id.best': 'Лучшее совпадение: {label} [adapter="{adapter}"]',
+      'id.metrics': '  cosine={c}  jsd={d}  l2={l2}',
+      'id.hash': '  hash={hash}',
+      'id.top3': 'Топ‑3:',
+      'id.topItem': '{i}) {label} | cosine={c} jsd={d} l2={l2}',
+      'id.decisionSame': 'Решение: похоже на ТО ЖЕ устройство (пороги пройдены).',
+      'id.decisionDiff': 'Решение: скорее ДРУГОЕ устройство (пороги не пройдены).',
+
+      'gauge.cosine': 'cosine'
+    },
+
+    en: {
+      'doc.title': 'Vektor T13 - WebGPU Atomic Browser Fingerprint | detect.expert',
+      'ui.h1': 'Vektor T13 - WebGPU Atomic Browser Fingerprint',
+      'ui.sub': `<b>Vektor T13 Technologies</b> • <b>detect.expert</b> • Developed by <b>Dmytro Momot</b>.<br/>
+Local demo of the <b>AtomicIncrement</b> idea: compute‑shader workgroups compete for a single <code>atomicAdd</code> counter.
+The per‑workgroup increment distribution forms a device‑specific signal.`,
+      'ui.langLabel': 'Language:',
+      'note.secureContext': `WebGPU works only in a <b>secure context</b> (<code>https://</code> or <code>http://localhost</code>);
+otherwise <code>navigator.gpu</code> is unavailable.`,
+
+      'ui.trials': 'Trials',
+      'ui.totalIncrements': 'Total increments',
+      'ui.downsampleBins': 'Downsample bins',
+      'ui.preset': 'Preset',
+      'ui.preset.default': 'Default (C1 128×64, C2 256×64, C3 128×128)',
+      'ui.preset.wide': 'Wide (C1 64×64, C2 128×128, C3 256×128)',
+      'ui.labelPlaceholder': "Label, e.g. 'MyPC-RTX4060'",
+
+      'btn.collect': 'Collect fingerprint',
+      'btn.enroll': 'Enroll locally',
+      'btn.identify': 'Identify',
+      'btn.export': 'Export',
+      'btn.import': 'Import',
+      'btn.clear': 'Clear',
+      'btn.copyHash': 'Copy hash',
+      'btn.copied': 'Copied!',
+
+      'status.checking': 'Status: <b class="warn">Checking…</b>',
+      'status.noGpu': 'Status: <b class="bad">WebGPU not available (no navigator.gpu)</b>',
+      'status.needSecure': 'Status: <b class="warn">Secure context required (https:// or http://localhost)</b>',
+      'status.apiPresent': 'Status: <b class="ok">WebGPU API present</b>',
+
+      'pill.gallery': 'Gallery: {n}',
+      'pill.adapter': 'Adapter: {name}',
+
+      'card.current': 'Current fingerprint',
+      'tbl.config': 'Config',
+      'tbl.runtime': 'Runtime',
+      'tbl.total': 'Total',
+      'tbl.mean': 'Mean',
+      'tbl.std': 'Std',
+      'tbl.cv': 'CV',
+
+      'note.hash': `Hash is computed over quantized, concatenated per‑config distributions via <code>SubtleCrypto.digest('SHA-256')</code>.`,
+
+      'card.identification': 'Identification',
+      'card.identification.sub': 'Cosine similarity + Jensen–Shannon distance',
+
+      'card.hardware': 'Hardware & API info',
+      'hw.adapterName': 'Adapter name',
+      'hw.vendor': 'Vendor',
+      'hw.architecture': 'Architecture',
+      'hw.device': 'Device',
+      'hw.description': 'Description',
+      'note.adapterInfo': `Modern WebGPU exposes <code>GPUAdapter.info</code> (replacing deprecated <code>requestAdapterInfo()</code>).
+Browsers may return empty strings to reduce fingerprinting surface.`,
+
+      'card.features': 'Features & limits',
+      'feat.features': 'Features',
+      'feat.wgsize': 'maxComputeWorkgroupSize',
+      'feat.wgperdim': 'maxComputeWorkgroupsPerDim',
+      'note.webgpuAvailability': 'WebGPU requires a secure context; availability varies by browser and platform.',
+
+      'card.about': 'About this demo',
+      'card.about.text': `Inspired by research on WebGPU hardware‑based device fingerprinting (AtomicIncrement).
+This page does <b>no network I/O</b>; the gallery is stored in <code>localStorage</code> on this origin.
+<br/><br/><b>Vektor T13 Technologies</b> • <b>detect.expert</b> • Developed by <b>Dmytro Momot</b>.`,
+
+      'footer': '© <b>Vektor T13 Technologies</b> • <b>detect.expert</b> • Developed by <b>Dmytro Momot</b>',
+
+      'chart.normalized': 'Normalized, downsampled distribution',
+      'chart.bins': 'bins',
+
+      'msg.collectFirst': 'Collect first.',
+      'msg.noSamples': 'No enrolled samples — press “Enroll locally” to save a baseline.',
+      'msg.error': 'Error: {e}',
+      'msg.enrolled': 'Enrolled: {label}\\nTotal samples: {n}',
+      'msg.imported': 'Imported samples: {n}.',
+      'msg.invalidJson': 'Invalid JSON format.',
+      'msg.parseFail': 'Failed to parse JSON.',
+      'msg.galleryCleared': 'Gallery cleared.',
+
+      'id.total': 'Total enrolled: {n}',
+      'id.best': 'Best: {label} [adapter="{adapter}"]',
+      'id.metrics': '  cosine={c}  jsd={d}  l2={l2}',
+      'id.hash': '  hash={hash}',
+      'id.top3': 'Top‑3:',
+      'id.topItem': '{i}) {label} | cosine={c} jsd={d} l2={l2}',
+      'id.decisionSame': 'Decision: Looks like the SAME device (thresholds met).',
+      'id.decisionDiff': 'Decision: LIKELY a DIFFERENT device (thresholds not met).',
+
+      'gauge.cosine': 'cosine'
+    },
+
+    zh: {
+      'doc.title': 'Vektor T13 - WebGPU Atomic 浏览器指纹 | detect.expert',
+      'ui.h1': 'Vektor T13 - WebGPU Atomic Browser Fingerprint',
+      'ui.sub': `<b>Vektor T13 Technologies</b> • <b>detect.expert</b> • 开发者：<b>Dmytro Momot</b>。<br/>
+本地演示 <b>AtomicIncrement</b> 思路：计算着色器工作组争用同一个 <code>atomicAdd</code> 计数器。
+每个 workgroup 的增量分布形成设备特征信号。`,
+      'ui.langLabel': '语言：',
+      'note.secureContext': `WebGPU 仅在 <b>安全上下文</b>（<code>https://</code> 或 <code>http://localhost</code>）中可用；
+否则 <code>navigator.gpu</code> 不可用。`,
+
+      'ui.trials': '试验次数',
+      'ui.totalIncrements': '总增量次数',
+      'ui.downsampleBins': '下采样 bins',
+      'ui.preset': '预设',
+      'ui.preset.default': 'Default (C1 128×64, C2 256×64, C3 128×128)',
+      'ui.preset.wide': 'Wide (C1 64×64, C2 128×128, C3 256×128)',
+      'ui.labelPlaceholder': "标签，例如 'MyPC-RTX4060'",
+
+      'btn.collect': '采集指纹',
+      'btn.enroll': '本地录入',
+      'btn.identify': '识别',
+      'btn.export': '导出',
+      'btn.import': '导入',
+      'btn.clear': '清空',
+      'btn.copyHash': '复制 hash',
+      'btn.copied': '已复制！',
+
+      'status.checking': '状态：<b class="warn">检查中…</b>',
+      'status.noGpu': '状态：<b class="bad">WebGPU 不可用（没有 navigator.gpu）</b>',
+      'status.needSecure': '状态：<b class="warn">需要安全上下文（https:// 或 http://localhost）</b>',
+      'status.apiPresent': '状态：<b class="ok">WebGPU API 可用</b>',
+
+      'pill.gallery': '样本库：{n}',
+      'pill.adapter': '适配器：{name}',
+
+      'card.current': '当前指纹',
+      'tbl.config': '配置',
+      'tbl.runtime': '耗时',
+      'tbl.total': '总计',
+      'tbl.mean': '均值',
+      'tbl.std': '标准差',
+      'tbl.cv': 'CV',
+
+      'note.hash': `Hash 由量化后的各配置分布拼接后计算得到（<code>SubtleCrypto.digest('SHA-256')</code>）。`,
+
+      'card.identification': '识别',
+      'card.identification.sub': '余弦相似度 + Jensen–Shannon 距离',
+
+      'card.hardware': '硬件与 API 信息',
+      'hw.adapterName': '适配器名称',
+      'hw.vendor': '厂商',
+      'hw.architecture': '架构',
+      'hw.device': '设备',
+      'hw.description': '描述',
+      'note.adapterInfo': `现代 WebGPU 提供 <code>GPUAdapter.info</code>（替代已弃用的 <code>requestAdapterInfo()</code>）。
+浏览器可能返回空字符串以降低指纹暴露面。`,
+
+      'card.features': '特性与限制',
+      'feat.features': '特性',
+      'feat.wgsize': 'maxComputeWorkgroupSize',
+      'feat.wgperdim': 'maxComputeWorkgroupsPerDim',
+      'note.webgpuAvailability': 'WebGPU 需要安全上下文；可用性取决于浏览器与平台。',
+
+      'card.about': '关于本演示',
+      'card.about.text': `灵感来自 WebGPU 基于硬件的设备指纹研究（AtomicIncrement）。
+本页面 <b>不进行任何网络通信</b>；样本库存储在本 origin 的 <code>localStorage</code> 中。
+<br/><br/><b>Vektor T13 Technologies</b> • <b>detect.expert</b> • 开发者：<b>Dmytro Momot</b>。`,
+
+      'footer': '© <b>Vektor T13 Technologies</b> • <b>detect.expert</b> • 开发者：<b>Dmytro Momot</b>',
+
+      'chart.normalized': '归一化并下采样后的分布',
+      'chart.bins': 'bins',
+
+      'msg.collectFirst': '请先采集指纹。',
+      'msg.noSamples': '没有本地样本——点击“本地录入”保存基线。',
+      'msg.error': '错误：{e}',
+      'msg.enrolled': '已录入：{label}\\n样本总数：{n}',
+      'msg.imported': '已导入样本：{n}。',
+      'msg.invalidJson': 'JSON 格式无效。',
+      'msg.parseFail': '解析 JSON 失败。',
+      'msg.galleryCleared': '样本库已清空。',
+
+      'id.total': '已录入总数：{n}',
+      'id.best': '最佳：{label} [adapter="{adapter}"]',
+      'id.metrics': '  cosine={c}  jsd={d}  l2={l2}',
+      'id.hash': '  hash={hash}',
+      'id.top3': '前三：',
+      'id.topItem': '{i}) {label} | cosine={c} jsd={d} l2={l2}',
+      'id.decisionSame': '结论：看起来是同一设备（满足阈值）。',
+      'id.decisionDiff': '结论：很可能是不同设备（未满足阈值）。',
+
+      'gauge.cosine': 'cosine'
+    },
+
+    vi: {
+      'doc.title': 'Vektor T13 - WebGPU Atomic Browser Fingerprint | detect.expert',
+      'ui.h1': 'Vektor T13 - WebGPU Atomic Browser Fingerprint',
+      'ui.sub': `<b>Vektor T13 Technologies</b> • <b>detect.expert</b> • Phát triển bởi <b>Dmytro Momot</b>.<br/>
+Demo cục bộ ý tưởng <b>AtomicIncrement</b>: các workgroup compute shader tranh chấp một bộ đếm <code>atomicAdd</code>.
+Phân bố số lần tăng theo workgroup tạo tín hiệu đặc trưng thiết bị.`,
+      'ui.langLabel': 'Ngôn ngữ:',
+      'note.secureContext': `WebGPU chỉ hoạt động trong <b>ngữ cảnh an toàn</b> (<code>https://</code> hoặc <code>http://localhost</code>);
+nếu không thì <code>navigator.gpu</code> sẽ không khả dụng.`,
+
+      'ui.trials': 'Số lần thử',
+      'ui.totalIncrements': 'Tổng số increment',
+      'ui.downsampleBins': 'Bins downsample',
+      'ui.preset': 'Preset',
+      'ui.preset.default': 'Default (C1 128×64, C2 256×64, C3 128×128)',
+      'ui.preset.wide': 'Wide (C1 64×64, C2 128×128, C3 256×128)',
+      'ui.labelPlaceholder': "Nhãn, ví dụ 'MyPC-RTX4060'",
+
+      'btn.collect': 'Thu thập fingerprint',
+      'btn.enroll': 'Enroll cục bộ',
+      'btn.identify': 'Identify',
+      'btn.export': 'Export',
+      'btn.import': 'Import',
+      'btn.clear': 'Xóa',
+      'btn.copyHash': 'Copy hash',
+      'btn.copied': 'Đã copy!',
+
+      'status.checking': 'Trạng thái: <b class="warn">Đang kiểm tra…</b>',
+      'status.noGpu': 'Trạng thái: <b class="bad">WebGPU không khả dụng (không có navigator.gpu)</b>',
+      'status.needSecure': 'Trạng thái: <b class="warn">Cần ngữ cảnh an toàn (https:// hoặc http://localhost)</b>',
+      'status.apiPresent': 'Trạng thái: <b class="ok">WebGPU API khả dụng</b>',
+
+      'pill.gallery': 'Gallery: {n}',
+      'pill.adapter': 'Adapter: {name}',
+
+      'card.current': 'Fingerprint hiện tại',
+      'tbl.config': 'Cấu hình',
+      'tbl.runtime': 'Thời gian',
+      'tbl.total': 'Tổng',
+      'tbl.mean': 'Trung bình',
+      'tbl.std': 'Độ lệch chuẩn',
+      'tbl.cv': 'CV',
+
+      'note.hash': `Hash được tính từ phân bố theo từng cấu hình (đã lượng tử hoá) qua <code>SubtleCrypto.digest('SHA-256')</code>.`,
+
+      'card.identification': 'Nhận dạng',
+      'card.identification.sub': 'Độ tương đồng cosine + khoảng cách Jensen–Shannon',
+
+      'card.hardware': 'Thông tin phần cứng & API',
+      'hw.adapterName': 'Tên adapter',
+      'hw.vendor': 'Hãng',
+      'hw.architecture': 'Kiến trúc',
+      'hw.device': 'Thiết bị',
+      'hw.description': 'Mô tả',
+      'note.adapterInfo': `WebGPU hiện đại cung cấp <code>GPUAdapter.info</code> (thay cho <code>requestAdapterInfo()</code> đã deprecated).
+Trình duyệt có thể trả về chuỗi rỗng để giảm bề mặt fingerprinting.`,
+
+      'card.features': 'Tính năng & giới hạn',
+      'feat.features': 'Tính năng',
+      'feat.wgsize': 'maxComputeWorkgroupSize',
+      'feat.wgperdim': 'maxComputeWorkgroupsPerDim',
+      'note.webgpuAvailability': 'WebGPU yêu cầu ngữ cảnh an toàn; mức hỗ trợ tùy trình duyệt và nền tảng.',
+
+      'card.about': 'Giới thiệu',
+      'card.about.text': `Lấy cảm hứng từ nghiên cứu fingerprint thiết bị dựa trên phần cứng qua WebGPU (AtomicIncrement).
+Trang này <b>không thực hiện I/O mạng</b>; gallery được lưu trong <code>localStorage</code> của origin này.
+<br/><br/><b>Vektor T13 Technologies</b> • <b>detect.expert</b> • Phát triển bởi <b>Dmytro Momot</b>.`,
+
+      'footer': '© <b>Vektor T13 Technologies</b> • <b>detect.expert</b> • Phát triển bởi <b>Dmytro Momot</b>',
+
+      'chart.normalized': 'Phân bố đã chuẩn hoá & downsample',
+      'chart.bins': 'bins',
+
+      'msg.collectFirst': 'Hãy thu thập trước.',
+      'msg.noSamples': 'Chưa có mẫu — nhấn “Enroll cục bộ” để lưu baseline.',
+      'msg.error': 'Lỗi: {e}',
+      'msg.enrolled': 'Đã enroll: {label}\\nTổng mẫu: {n}',
+      'msg.imported': 'Đã import mẫu: {n}.',
+      'msg.invalidJson': 'JSON không hợp lệ.',
+      'msg.parseFail': 'Không parse được JSON.',
+      'msg.galleryCleared': 'Đã xóa gallery.',
+
+      'id.total': 'Tổng đã enroll: {n}',
+      'id.best': 'Tốt nhất: {label} [adapter="{adapter}"]',
+      'id.metrics': '  cosine={c}  jsd={d}  l2={l2}',
+      'id.hash': '  hash={hash}',
+      'id.top3': 'Top‑3:',
+      'id.topItem': '{i}) {label} | cosine={c} jsd={d} l2={l2}',
+      'id.decisionSame': 'Kết luận: Có vẻ là CÙNG thiết bị (đạt ngưỡng).',
+      'id.decisionDiff': 'Kết luận: NHIỀU KHẢ NĂNG là thiết bị KHÁC (không đạt ngưỡng).',
+
+      'gauge.cosine': 'cosine'
+    }
+  };
+
+  function tpl(str, vars){
+    return String(str).replace(/\{(\w+)\}/g, (_, k) => (vars && (k in vars)) ? String(vars[k]) : `{${k}}`);
+  }
+  function t(key, vars){
+    const dict = I18N[currentLang] || I18N.en;
+    const base = I18N.en || {};
+    const raw = (key in dict) ? dict[key] : ((key in base) ? base[key] : key);
+    return vars ? tpl(raw, vars) : String(raw);
+  }
+
+  function detectInitialLang(){
+    try {
+      const saved = localStorage.getItem('vt13_wgpu_lang');
+      if (SUPPORTED_LANGS.includes(saved)) return saved;
+    } catch {}
+    const nav = (navigator.language || 'en').toLowerCase();
+    if (nav.startsWith('ru')) return 'ru';
+    if (nav.startsWith('zh')) return 'zh';
+    if (nav.startsWith('vi')) return 'vi';
+    return 'en';
+  }
+
+  let currentLang = detectInitialLang();
+  let statusKey = 'status.checking';
+  let copyKey = 'btn.copyHash';
+  let adapterNameRaw = '—';
+
+  let current = null;     // {features, hash, meta}
+  let lastIdentify = null; // {total,best,top3,match}
+  let lastMsg = null;      // {key, vars}
+
+  function applyStaticI18N(){
+    document.documentElement.lang = (currentLang === 'zh') ? 'zh-CN' : currentLang;
+    document.title = t('doc.title');
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      el.textContent = t(el.dataset.i18n);
+    });
+    document.querySelectorAll('[data-i18n-html]').forEach(el => {
+      el.innerHTML = t(el.dataset.i18nHtml);
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      el.placeholder = t(el.dataset.i18nPlaceholder);
+    });
+  }
+
+  function setStatus(k){
+    statusKey = k;
+    statusEl.innerHTML = t(k);
+  }
+
+  function setProgress(frac){
+    const p = Math.max(0, Math.min(1, frac||0));
+    bar.style.width = (p*100).toFixed(0)+'%';
+    pct.textContent = (p*100).toFixed(0)+'%';
+  }
+
+  // Gallery storage
+  const GKEY = 'wgpu_atomic_fp_gallery_v2';
+  const readGallery = () => { try { return JSON.parse(localStorage.getItem(GKEY) || '[]'); } catch { return []; } };
+  const writeGallery = (arr) => localStorage.setItem(GKEY, JSON.stringify(arr));
+
+  function setGalleryCount(){
+    galleryCountEl.textContent = t('pill.gallery', { n: readGallery().length });
+  }
+
+  function setAdapterPill(name){
+    adapterNameRaw = name || '—';
+    adapterNameEl.textContent = t('pill.adapter', { name: adapterNameRaw });
+  }
+
+  function setCopyLabel(){
+    btnCopy.textContent = t(copyKey);
+  }
+
+  function setMsg(key, vars = {}){
+    lastIdentify = null;
+    lastMsg = { key, vars };
+    identsEl.textContent = t(key, vars);
+  }
+
+  function renderIdentify(res){
+    if (!res) return;
+    drawGauge(gauge, Math.max(0, Math.min(1, res.best.cosine)));
+
+    const lines = [
+      t('id.total', { n: res.total }),
+      t('id.best', { label: res.best.label, adapter: res.best.adapter }),
+      t('id.metrics', { c: res.best.cosine.toFixed(4), d: res.best.jsd.toFixed(4), l2: res.best.l2.toFixed(4) }),
+      t('id.hash', { hash: res.best.hash }),
+      '',
+      t('id.top3'),
+      ...res.top3.map((s, idx) => t('id.topItem', { i: String(idx+1), label: s.label, c: s.cosine.toFixed(4), d: s.jsd.toFixed(4), l2: s.l2.toFixed(4) })),
+      '',
+      res.match ? t('id.decisionSame') : t('id.decisionDiff')
+    ];
+    identsEl.textContent = lines.join('\n');
+  }
+
+  function rerenderDynamic(){
+    // status
+    statusEl.innerHTML = t(statusKey);
+
+    // pills
+    setGalleryCount();
+    setAdapterPill(adapterNameRaw);
+
+    // copy button
+    setCopyLabel();
+
+    // idents
+    if (lastIdentify) renderIdentify(lastIdentify);
+    else if (lastMsg) identsEl.textContent = t(lastMsg.key, lastMsg.vars);
+  }
+
+  function setLanguage(lang, {persist=true} = {}){
+    currentLang = SUPPORTED_LANGS.includes(lang) ? lang : 'en';
+    langSel.value = currentLang;
+
+    if (persist) {
+      try { localStorage.setItem('vt13_wgpu_lang', currentLang); } catch {}
+    }
+
+    applyStaticI18N();
+    rerenderDynamic();
+  }
+
+  // Hook language selector
+  langSel.addEventListener('change', () => setLanguage(langSel.value, {persist:true}));
+
+  // Apply initial language
+  setLanguage(currentLang, {persist:false});
+
+  // =========================
+  // WebGPU init + helpers
+  // =========================
+  const isSecure = isSecureContext;
+
+  if (!('gpu' in navigator)){
+    setStatus('status.noGpu');
+  } else if (!isSecure){
+    setStatus('status.needSecure');
+  } else {
+    setStatus('status.apiPresent');
+  }
+
+  setGalleryCount();
+  setAdapterPill('—');
+
+  const adapter = await (navigator.gpu?.requestAdapter().catch(()=>null));
+  let device = null, queue = null;
+
+  if (adapter){
+    setAdapterPill(adapter.name || 'unknown');
+    try { device = await adapter.requestDevice(); queue = device.queue; } catch {}
+  } else {
+    setAdapterPill('—');
+  }
+
+  // --- Hardware hints
+  async function loadAdapterInfo(){
+    let info = null;
+    try {
+      if ('info' in adapter && adapter.info){
+        info = adapter.info;
+      } else if (typeof adapter?.requestAdapterInfo === 'function'){
+        info = await adapter.requestAdapterInfo();
+      }
+    } catch {}
+
+    i_name.textContent   = adapter?.name || '—';
+    i_vendor.textContent = info?.vendor || '—';
+    i_arch.textContent   = info?.architecture || '—';
+    i_device.textContent = info?.device || '—';
+    i_desc.textContent   = info?.description || '—';
+
+    if (device){
+      try {
+        const feats = Array.from(device.features?.values?.() || []);
+        i_features.textContent = feats.length ? `${feats.length} (${feats.slice(0,6).join(', ')}${feats.length>6?'…':''})` : '—';
+      } catch { i_features.textContent = '—'; }
+
+      try {
+        const L = device.limits || {};
+        const wgsize = [L.maxComputeWorkgroupSizeX, L.maxComputeWorkgroupSizeY, L.maxComputeWorkgroupSizeZ].filter(x=>x!=null).join(' × ');
+        i_wgsize.textContent = wgsize || '—';
+        i_wgperdim.textContent = (L.maxComputeWorkgroupsPerDimension!=null) ? String(L.maxComputeWorkgroupsPerDimension) : '—';
+      } catch { i_wgsize.textContent = i_wgperdim.textContent = '—'; }
+    }
+  }
+  if (adapter) loadAdapterInfo();
+
+  // WGSL compute (single global atomic counter; per‑workgroup sums)
+  const shaderWGSL = /* wgsl */`
+struct Counter { n: atomic<u32>; };
+@group(0) @binding(0) var<storage, read_write> g : Counter;
+
+struct OutBuf { vals: array<atomic<u32>>; };
+@group(0) @binding(1) var<storage, read_write> out : OutBuf;
+
+struct Params { limit: u32; _p1: u32; _p2: u32; _p3: u32; };
+@group(0) @binding(2) var<uniform> params : Params;
+
+override WG_SIZE: u32 = 64u;
+
+@compute @workgroup_size(WG_SIZE)
+fn main(@builtin(workgroup_id) wid: vec3<u32>, @builtin(local_invocation_id) lid: vec3<u32>) {
+  if (lid.x == 0u) { atomicStore(&out.vals[wid.x], 0u); }
+  workgroupBarrier();
+  var local: u32 = 0u;
+  loop {
+    let prev = atomicAdd(&g.n, 1u);
+    if (prev >= params.limit) { break; }
+    local = local + 1u;
+  }
+  atomicAdd(&out.vals[wid.x], local);
+}
+`;
+  const module = device ? device.createShaderModule({ code: shaderWGSL }) : null;
+
+  function getPreset(limit){
+    const p = selPreset.value;
+    if (p === 'wide'){
+      return [
+        { name:'C1', wgCount:64,  wgSize:64,  limit },
+        { name:'C2', wgCount:128, wgSize:128, limit },
+        { name:'C3', wgCount:256, wgSize:128, limit },
+      ];
+    }
+    return [
+      { name:'C1', wgCount:128, wgSize:64,  limit },
+      { name:'C2', wgCount:256, wgSize:64,  limit },
+      { name:'C3', wgCount:128, wgSize:128, limit },
+    ];
+  }
+
+  function medianOfTrials(list){
+    const L=list[0].length; const m=new Array(L);
+    for (let i=0;i<L;i++){
+      const col=list.map(v=>v[i]).sort((a,b)=>a-b);
+      const mid= Math.floor(col.length/2);
+      m[i]= col.length%2 ? col[mid] : 0.5*(col[mid-1]+col[mid]);
+    }
+    return m;
+  }
+
+  function normalize(a){
+    const s=a.reduce((x,y)=>x+y,0)||1;
+    return a.map(v=>v/s);
+  }
+
+  function downsample(a,bins){
+    const L=a.length; const out=new Array(bins).fill(0);
+    for (let i=0;i<L;i++){ out[Math.floor(i*bins/L)] += a[i]; }
+    const s = out.reduce((x,y)=>x+y,0)||1;
+    return out.map(v=>v/s);
+  }
+
+  function cosine(u,v){
+    let dot=0,n1=0,n2=0;
+    for (let i=0;i<u.length;i++){ dot+=u[i]*v[i]; n1+=u[i]*u[i]; n2+=v[i]*v[i]; }
+    return dot / (Math.sqrt(n1)*Math.sqrt(n2)||1);
+  }
+
+  function jsd(p,q){
+    const m=p.map((x,i)=>.5*(x+q[i]));
+    const KL=(a,b)=>{ let s=0; for(let i=0;i<a.length;i++){ if(a[i]>0 && b[i]>0) s+=a[i]*Math.log2(a[i]/b[i]); } return s; };
+    return Math.sqrt(.5*KL(p,m)+.5*KL(q,m));
+  }
+
+  async function sha256Hex(bytes){
+    const d=await crypto.subtle.digest('SHA-256',bytes);
+    return [...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+
+  function drawBars(canvas, values){
+    const dpr = window.devicePixelRatio||1;
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    canvas.width = Math.floor(w*dpr); canvas.height = Math.floor(h*dpr);
+    const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
+    ctx.clearRect(0,0,w,h);
+    const pad = 8, W = w - pad*2, H = h - pad*2;
+    const max = Math.max(...values, 1e-9);
+    const n = values.length; const bw = W / n;
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border');
+    ctx.beginPath(); ctx.moveTo(pad, h-pad); ctx.lineTo(w-pad, h-pad); ctx.stroke();
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent');
+    for (let i=0;i<n;i++){
+      const v = values[i]/max; const x = pad + i*bw; const barH = v*H;
+      ctx.fillRect(x, h-pad-barH, Math.max(1, bw-1), barH);
+    }
+  }
+
+  function drawGauge(canvas, value){ // 0..1
+    const dpr=window.devicePixelRatio||1, w=canvas.clientWidth, h=canvas.clientHeight;
+    canvas.width=Math.floor(w*dpr); canvas.height=Math.floor(h*dpr);
+    const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+    ctx.clearRect(0,0,w,h);
+    const pad=10, W=w-pad*2, y=h/2;
+
+    ctx.fillStyle='rgba(127,127,127,.2)';
+    ctx.fillRect(pad, y-8, W, 16);
+
+    const grad=ctx.createLinearGradient(pad,0,pad+W,0);
+    grad.addColorStop(0, getComputedStyle(document.documentElement).getPropertyValue('--accent'));
+    grad.addColorStop(1, '#9dd3ff');
+    ctx.fillStyle=grad;
+    const val=Math.max(0,Math.min(1,value||0));
+    ctx.fillRect(pad, y-8, W*val, 16);
+
+    ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--fg');
+    ctx.font='14px ui-monospace, monospace';
+    ctx.textBaseline='middle';
+    ctx.fillText(`${t('gauge.cosine')}: ${val.toFixed(4)}`, pad, y-16);
+  }
+
+  async function runTrial({wgCount, wgSize, limit}){
+    if (!device) throw new Error('WebGPU device unavailable');
+    const pipeline = device.createComputePipeline({
+      layout:'auto', compute:{ module, entryPoint:'main', constants:{ 'WG_SIZE': wgSize } }
+    });
+    const outSize = wgCount * 4;
+    const counterBuf = device.createBuffer({ size:4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
+    const outBuf     = device.createBuffer({ size: outSize, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
+    const uBuf       = device.createBuffer({ size:16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+
+    queue.writeBuffer(counterBuf, 0, new Uint32Array([0]));
+    queue.writeBuffer(outBuf, 0, new Uint8Array(outSize));
+    queue.writeBuffer(uBuf, 0, new Uint32Array([limit,0,0,0]));
+
+    const bindGroup = device.createBindGroup({
+      layout: pipeline.getBindGroupLayout(0),
+      entries: [
+        { binding:0, resource:{ buffer: counterBuf } },
+        { binding:1, resource:{ buffer: outBuf } },
+        { binding:2, resource:{ buffer: uBuf } },
+      ]
+    });
+
+    const encoder = device.createCommandEncoder();
+    const pass = encoder.beginComputePass();
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, bindGroup);
+    pass.dispatchWorkgroups(wgCount, 1, 1);
+    pass.end();
+
+    const readBuf = device.createBuffer({ size: outSize, usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ });
+    encoder.copyBufferToBuffer(outBuf, 0, readBuf, 0, outSize);
+
+    const t0 = performance.now();
+    queue.submit([encoder.finish()]);
+    await queue.onSubmittedWorkDone();
+    const t1 = performance.now();
+
+    await readBuf.mapAsync(GPUMapMode.READ);
+    const arr = new Uint32Array(readBuf.getMappedRange().slice(0)); readBuf.unmap();
+
+    const total = arr.reduce((a,b)=>a+b,0);
+    const mean = total / arr.length;
+    const variance = arr.reduce((a,b)=>a + (b-mean)*(b-mean), 0) / arr.length;
+    const std = Math.sqrt(variance);
+    const cv = std / mean;
+    return { counts: Array.from(arr), stats: { total, mean, std, cv }, runtime_ms: (t1 - t0) };
+  }
+
+  function clearUI(){
+    tblBody.innerHTML='';
+    charts.innerHTML='';
+    hashEl.textContent='SHA‑256: —';
+    identsEl.textContent='';
+    lastIdentify = null;
+    lastMsg = null;
+    drawGauge(gauge, 0);
+  }
+
+  function addRow(cells){
+    const tr=document.createElement('tr');
+    for (const c of cells){
+      const td=document.createElement('td');
+      td.textContent=c;
+      tr.appendChild(td);
+    }
+    tblBody.appendChild(tr);
+  }
+
+  async function collect(){
+    clearUI();
+    setProgress(0);
+
+    btnCollect.disabled = true;
+    btnEnroll.disabled = true;
+    btnIdentify.disabled = true;
+    btnExport.disabled = true;
+
+    const trials = parseInt(selTrials.value,10);
+    const limit  = parseInt(selLimit.value,10);
+    const bins   = parseInt(selBins.value,10);
+    const cfgs   = getPreset(limit);
+
+    const feats = [];
+    const totalSteps = cfgs.length * trials;
+    let step = 0;
+
+    for (const cfg of cfgs){
+      const runs = [];
+      let lastStats = null, runtime = 0;
+
+      for (let tRun=0;tRun<trials;tRun++){
+        const r = await runTrial(cfg);
+        runs.push(r.counts);
+        lastStats = r.stats;
+        runtime += r.runtime_ms;
+
+        step++;
+        setProgress(step/totalSteps);
+      }
+
+      const med = medianOfTrials(runs);
+      const norm = normalize(med);
+      const ds = downsample(norm, bins);
+      feats.push(...ds);
+
+      addRow([
+        `${cfg.name} (${cfg.wgCount}×${cfg.wgSize})`,
+        `${(runtime/trials).toFixed(2)} ms`,
+        lastStats.total.toLocaleString(),
+        lastStats.mean.toFixed(1),
+        lastStats.std.toFixed(1),
+        lastStats.cv.toFixed(3)
+      ]);
+
+      const holder = document.createElement('div');
+      holder.style.marginTop='8px';
+      holder.innerHTML = `
+        <div class="flex-between">
+          <div>
+            <b>${cfg.name}</b> (${cfg.wgCount}×${cfg.wgSize}) — ${bins} <span data-i18n="chart.bins">${t('chart.bins')}</span>
+          </div>
+          <span class="muted" data-i18n="chart.normalized">${t('chart.normalized')}</span>
+        </div>
+      `;
+      const canvas = document.createElement('canvas');
+      holder.appendChild(canvas);
+      charts.appendChild(holder);
+      drawBars(canvas, ds);
+    }
+
+    const f32 = new Float32Array(feats);
+    const q = new Uint8Array(f32.length);
+    for (let i=0;i<f32.length;i++){
+      q[i] = Math.max(0, Math.min(255, Math.round(f32[i]*255)));
+    }
+    const hash = await sha256Hex(q);
+
+    current = {
+      features: Array.from(f32),
+      hash,
+      meta: {
+        createdAt: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        adapterName: adapter?.name || 'unknown',
+        preset: selPreset.value,
+        bins,
+        trials,
+        configs: cfgs.map(c=>({wgCount:c.wgCount, wgSize:c.wgSize, limit:c.limit}))
+      }
+    };
+
+    hashEl.textContent = `SHA‑256: ${hash}`;
+
+    btnEnroll.disabled = false;
+    btnIdentify.disabled = false;
+    btnExport.disabled = false;
+
+    // Update any newly added dynamic i18n nodes inside charts
+    applyStaticI18N();
+    rerenderDynamic();
+  }
+
+  function identify(){
+    const gal = readGallery();
+
+    if (!current){
+      setMsg('msg.collectFirst');
+      drawGauge(gauge, 0);
+      return;
+    }
+    if (!gal.length){
+      setMsg('msg.noSamples');
+      drawGauge(gauge, 0);
+      return;
+    }
+
+    const cur = current.features;
+
+    function score(entry){
+      const f = entry.features;
+      const L = Math.min(cur.length, f.length);
+      const p = cur.slice(0, L), q = f.slice(0, L);
+      const sP = p.reduce((a,b)=>a+b,0)||1, sQ = q.reduce((a,b)=>a+b,0)||1;
+      for (let i=0;i<L;i++){ p[i]/=sP; q[i]/=sQ; }
+      const c = cosine(p,q);
+      const d = jsd(p,q);
+      let l2=0; for (let i=0;i<L;i++){ const x=p[i]-q[i]; l2+=x*x; } l2=Math.sqrt(l2);
+      return { label: entry.label, hash: entry.hash, cosine:c, jsd:d, l2, adapter: entry.meta?.adapterName||'' };
+    }
+
+    const scored = gal.map(score).sort((a,b)=> (b.cosine - a.cosine) || (a.jsd - b.jsd));
+    const best = scored[0];
+    const match = (best.cosine >= 0.985 && best.jsd <= 0.04);
+
+    lastMsg = null;
+    lastIdentify = {
+      total: gal.length,
+      best,
+      top3: scored.slice(0,3),
+      match
+    };
+
+    renderIdentify(lastIdentify);
+  }
+
+  // UI wiring
+  btnCollect.onclick = async () => {
+    try {
+      await collect();
+      if (readGallery().length) identify();
+    } catch(e){
+      setMsg('msg.error', { e: (e && e.message) ? e.message : String(e) });
+    } finally {
+      btnCollect.disabled = false;
+    }
+  };
+
+  btnIdentify.onclick = identify;
+
+  btnEnroll.onclick = () => {
+    if (!current) return;
+
+    const label = (inputLabel.value.trim() || `sample-${Date.now()}`);
+    const gal = readGallery();
+    gal.push({ label, hash: current.hash, features: current.features, meta: current.meta });
+    writeGallery(gal);
+    setGalleryCount();
+
+    lastIdentify = null;
+    setMsg('msg.enrolled', { label, n: gal.length });
+  };
+
+  btnExport.onclick = () => {
+    const gal = readGallery();
+    const blob = new Blob([JSON.stringify({ gallery: gal }, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download='atomic_fingerprint_gallery.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  btnImport.onclick = ()=> fileImport.click();
+
+  fileImport.onchange = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+
+    try{
+      const data = JSON.parse(await file.text());
+      if (Array.isArray(data.gallery)){
+        writeGallery(data.gallery);
+        setGalleryCount();
+        lastIdentify = null;
+        setMsg('msg.imported', { n: data.gallery.length });
+      } else {
+        lastIdentify = null;
+        setMsg('msg.invalidJson');
+      }
+    } catch {
+      lastIdentify = null;
+      setMsg('msg.parseFail');
+    }
+    fileImport.value = '';
+  };
+
+  btnClear.onclick = () => {
+    writeGallery([]);
+    setGalleryCount();
+    lastIdentify = null;
+    setMsg('msg.galleryCleared');
+  };
+
+  btnCopy.onclick = async () => {
+    const txt = hashEl.textContent.replace(/^SHA‑256:\s*/,'').trim();
+    if (!txt || txt==='—') return;
+
+    try {
+      await navigator.clipboard.writeText(txt);
+      copyKey = 'btn.copied';
+      setCopyLabel();
+      setTimeout(()=>{
+        copyKey = 'btn.copyHash';
+        setCopyLabel();
+      }, 1200);
+    } catch {}
+  };
+
+  // Initial UI
+  setCopyLabel();
+  drawGauge(gauge, 0);
+})();
+</script>
+
+</body>
+</html>
